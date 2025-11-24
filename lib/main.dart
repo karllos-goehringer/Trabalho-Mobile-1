@@ -1,4 +1,5 @@
 import 'package:app_trabalho/models/NotaClass.dart';
+import 'package:app_trabalho/models/TarefaClass.dart';
 import 'package:app_trabalho/pages/FormAddNotaCard.dart';
 import 'package:app_trabalho/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async  {
   await Hive.initFlutter();
-  Hive.registerAdapter(NotaAdapter());
-  var boxAnotacoes = await Hive.openBox<Nota>('notaBox');
+  Hive.registerAdapter(TarefaAdapter());
+  var boxAnotacoes = await Hive.openBox<Tarefa>('notaBox');
   runApp(MyApp());
 }
 
@@ -59,11 +60,11 @@ final VoidCallback toggleTheme;
   const HomePage({super.key, required this.toggleTheme});
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<Nota>('notaBox'); 
+    final box = Hive.box<Tarefa>('notaBox'); 
 
     return Scaffold(
       appBar: AppBar(title: const Text('Minhas Anotações')),
-      body: ValueListenableBuilder<Box<Nota>>(
+      body: ValueListenableBuilder<Box<Tarefa>>(
         valueListenable: box.listenable(),
         builder: (context, box, _) {
           if (box.isEmpty) {
@@ -77,7 +78,7 @@ final VoidCallback toggleTheme;
             itemCount: itemCount,
             itemBuilder: (context, index) {
               final int reversedIndex = itemCount - 1 - index;
-              final Nota? nota = box.getAt(reversedIndex);
+              final Tarefa ? nota = box.getAt(reversedIndex);
 
               if (nota == null) return const SizedBox.shrink();
 
