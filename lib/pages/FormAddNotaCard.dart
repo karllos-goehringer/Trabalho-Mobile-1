@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/NotaClass.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateNotePage extends StatefulWidget {
   const CreateNotePage({super.key});
@@ -19,9 +20,20 @@ class _CreateNotePageState extends State<CreateNotePage> {
   final String _selectedDate =
       DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
 
-  Future<void> pickImage() async {
-    // TODO: implementar escolha de imagem
-  }
+Future<void> pickImage() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? capturedImage = await picker.pickImage(source: ImageSource.gallery);
+
+  if (capturedImage == null) return; // usuário cancelou
+  final Directory appDir = await Directory.systemTemp.createTemp();
+  final String newPath = "${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.png";
+
+  final File newImage = await File(capturedImage.path).copy(newPath);
+
+  setState(() {
+    imagePath = newImage.path; // salva o caminho que será guardado no Hive
+  });
+}
 
   void saveNote() async {
     if (_titleController.text.isEmpty || _textController.text.isEmpty) {

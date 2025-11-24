@@ -4,7 +4,6 @@ import 'package:app_trabalho/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import './models/boxes.dart';
 void main() async  {
   await Hive.initFlutter();
   Hive.registerAdapter(NotaAdapter());
@@ -60,7 +59,7 @@ final VoidCallback toggleTheme;
   const HomePage({super.key, required this.toggleTheme});
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<Nota>('notaBox'); // box já aberta no main
+    final box = Hive.box<Nota>('notaBox'); 
 
     return Scaffold(
       appBar: AppBar(title: const Text('Minhas Anotações')),
