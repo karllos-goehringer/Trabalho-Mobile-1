@@ -1,12 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/NotaClass.dart';
-import 'dart:typed_data';
+
 class NoteCard extends StatelessWidget {
   final Nota nota;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete; // <-- callback para deletar
 
-  const NoteCard({super.key, required this.nota, this.onTap});
+  const NoteCard({
+    super.key,
+    required this.nota,
+    this.onTap,
+    this.onDelete, // <-- recebe a função
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +27,25 @@ class NoteCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                nota.titulo,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      nota.titulo,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: onDelete,
+                  )
+                ],
               ),
 
               const SizedBox(height: 8),

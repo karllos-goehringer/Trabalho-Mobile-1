@@ -3,8 +3,10 @@ import 'package:app_trabalho/pages/FormAddNotaCard.dart';
 import 'package:app_trabalho/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() async  {
+void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(NotaAdapter());
   var boxAnotacoes = await Hive.openBox<Nota>('notaBox');
@@ -48,21 +50,41 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
         ),
       ),
+       localizationsDelegates: const [
+        // Delegados globais (padrão)
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'), // Inglês como fallback
+        Locale('pt', 'BR'), // Português (se você quiser a tradução do Quill)
+      ],
       home: HomePage(toggleTheme: toggleTheme),
     );
   }
 }
 
-
 class HomePage extends StatelessWidget {
-final VoidCallback toggleTheme; 
+  final VoidCallback toggleTheme;
+
   const HomePage({super.key, required this.toggleTheme});
+
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<Nota>('notaBox'); 
+    final box = Hive.box<Nota>('notaBox');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Minhas Anotações')),
+      appBar: AppBar(
+        title: const Text('Minhas Anotações'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.brightness_6),
+            onPressed: toggleTheme, // <-- troca tema aqui!
+          ),
+        ],
+      ),
       body: ValueListenableBuilder<Box<Nota>>(
         valueListenable: box.listenable(),
         builder: (context, box, _) {
@@ -98,10 +120,18 @@ final VoidCallback toggleTheme;
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: NoteCard(
                     nota: nota,
                     onTap: () {},
+                    onDelete: () async {
+                      await box.deleteAt(reversedIndex);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Anotação removida')),
+                      );
+                    },
                   ),
                 ),
               );
