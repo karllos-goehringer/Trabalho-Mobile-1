@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'dart:io';
 import 'dart:typed_data';
 part 'NotaClass.g.dart';
 

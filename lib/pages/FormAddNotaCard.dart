@@ -7,6 +7,8 @@ import '../models/NotaClass.dart'; // Modelo Nota
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import 'dart:ui';
+import 'package:flutter/widgets.dart';
 
 class CreateNotePage extends StatefulWidget {
   const CreateNotePage({super.key});
@@ -17,9 +19,9 @@ class CreateNotePage extends StatefulWidget {
 
 class _CreateNotePageState extends State<CreateNotePage> {
   final _titleController = TextEditingController();
-  // NOVO: Inicialização do QuillController para gerenciar o conteúdo rico
-  final QuillController _quillController = QuillController.basic(); 
-  
+  // Inicialização do QuillController para gerenciar o conteúdo rico
+  final QuillController _quillController = QuillController.basic();
+
   Uint8List? imageBytes;
 
   final String _selectedDate = DateFormat(
@@ -54,15 +56,17 @@ class _CreateNotePageState extends State<CreateNotePage> {
       ).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
       return;
     }
-    
+
     // 2. Serializa o conteúdo do Quill para uma string JSON (Delta)
-    final richTextJson = jsonEncode(_quillController.document.toDelta().toJson());
+    final richTextJson = jsonEncode(
+      _quillController.document.toDelta().toJson(),
+    );
 
     // 3. Verifica se o texto rico está vazio (usando texto simples para validação)
     if (_quillController.document.toPlainText().trim().isEmpty) {
-       ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("O texto da nota não pode estar vazio!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("O texto da nota não pode estar vazio!")),
+      );
       return;
     }
 
@@ -83,6 +87,16 @@ class _CreateNotePageState extends State<CreateNotePage> {
   @override
   Widget build(BuildContext context) {
     const double editorHeight = 300; // Altura fixa para o editor no ListView
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    // Define as cores dinâmicas
+    final editorBackgroundColor = colorScheme.surface;
+    // Usa uma cor ligeiramente diferente da superfície para dar destaque à barra de ferramentas
+    final toolbarBackgroundColor = isDark
+        ? colorScheme.surfaceContainerHighest
+        : colorScheme.surfaceContainer;
+    final borderColor = colorScheme.outlineVariant;
 
     return Scaffold(
       appBar: AppBar(
@@ -99,6 +113,9 @@ class _CreateNotePageState extends State<CreateNotePage> {
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(labelText: "Título"),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+              ), // Adapta a cor do texto
             ),
             const SizedBox(height: 20),
 
@@ -109,12 +126,15 @@ class _CreateNotePageState extends State<CreateNotePage> {
                 // Barra de ferramentas do Quill
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(8)), 
+                    color: toolbarBackgroundColor, // COR DINÂMICA
+                    border: Border.all(color: borderColor), // COR DINÂMICA
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(8),
+                    ),
                   ),
                   child: QuillSimpleToolbar(
                     controller: _quillController,
+                    // Os ícones dos botões se adaptam automaticamente ao tema
                     config: const QuillSimpleToolbarConfig(
                       showAlignmentButtons: false,
                       showSearchButton: false,
@@ -124,20 +144,35 @@ class _CreateNotePageState extends State<CreateNotePage> {
                     ),
                   ),
                 ),
-                
+
                 // Editor de texto (substituindo o TextField anterior)
                 Container(
                   height: editorHeight, // Altura fixa
+                
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                    color: editorBackgroundColor,
+                    border: Border.all(color: borderColor), // COR DINÂMICA
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(8),
+                    ),
                   ),
                   child: QuillEditor(
                     controller: _quillController,
-                    config: const QuillEditorConfig(
+                    config: QuillEditorConfig(
                       checkBoxReadOnly: false,
-                      padding: EdgeInsets.all(12),
-                      placeholder: 'Digite o conteúdo da nota com formatação aqui...',
+                      padding: const EdgeInsets.all(12),
+                      placeholder:
+                          'Digite o conteúdo da nota com formatação aqui...',
+                      // É importante definir o estilo padrão do texto para garantir que ele seja legível em ambos os temas.
+                      customStyles: DefaultStyles(
+                        paragraph: DefaultTextBlockStyle(
+                          TextStyle(color: colorScheme.onSurface),
+                          const HorizontalSpacing(0, 0),
+                          const VerticalSpacing(0, 0),
+                          const VerticalSpacing(0,0,), // lineSpacing obrigatório
+                          null, // decoration pode ser null
+                        ),
+                      ),
                     ),
                     focusNode: FocusNode(),
                     scrollController: ScrollController(),
@@ -145,7 +180,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
 
             // Botão Adicionar Imagem (mantido)
@@ -154,7 +189,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
               icon: const Icon(Icons.image),
               label: const Text("Adicionar imagem"),
             ),
-            
+
             // Pré-visualização da imagem (mantida)
             if (imageBytes != null)
               Column(
