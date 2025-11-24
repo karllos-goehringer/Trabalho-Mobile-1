@@ -1,12 +1,14 @@
 import 'package:hive/hive.dart';
+import 'dart:typed_data';
 part 'NotaClass.g.dart';
+
 @HiveType(typeId: 1)
 class Nota {
-    Nota({
+  Nota({
     required this.titulo,
     required this.texto,
     required this.momentoCadastro,
-    this.imagePath,
+    this.imageBytes,
   });
   @HiveField(0)
   String titulo;
@@ -15,5 +17,5 @@ class Nota {
   @HiveField(2)
   String momentoCadastro;
   @HiveField(3)
-  String? imagePath;
+  Uint8List? imageBytes;
 }

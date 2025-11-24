@@ -1,10 +1,13 @@
 import 'package:app_trabalho/models/NotaClass.dart';
+import 'package:app_trabalho/pages/EditNotaCard.dart';
 import 'package:app_trabalho/pages/FormAddNotaCard.dart';
 import 'package:app_trabalho/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() async  {
+void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(NotaAdapter());
   var boxAnotacoes = await Hive.openBox<Nota>('notaBox');
@@ -48,21 +51,57 @@ class _MyAppState extends State<MyApp> {
           brightness: Brightness.dark,
         ),
       ),
+      localizationsDelegates: const [
+        // Delegados globais (padrão)
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'), // Inglês como fallback
+        Locale('pt', 'BR'), // Português (se você quiser a tradução do Quill)
+      ],
       home: HomePage(toggleTheme: toggleTheme),
     );
   }
 }
+class HomePage extends StatefulWidget {
+  final VoidCallback toggleTheme; // Mantém a propriedade para trocar o tema
 
-
-class HomePage extends StatelessWidget {
-final VoidCallback toggleTheme; 
   const HomePage({super.key, required this.toggleTheme});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // A box Hive, inicializada no initState da sua aplicação principal
+  late Box<Nota> notaBox;
+
+  @override
+  void initState() {
+    super.initState();
+    // É crucial que a box esteja aberta antes de tentar usá-la
+    notaBox = Hive.box<Nota>('notaBox'); 
+  }
+
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<Nota>('notaBox'); 
+    // Acessa a box diretamente aqui, já que está inicializada
+    final box = notaBox; 
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Minhas Anotações')),
+      appBar: AppBar(
+        title: const Text('Minhas Anotações'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.brightness_6),
+            onPressed: widget.toggleTheme, // Acesso via widget.toggleTheme
+          ),
+        ],
+      ),
       body: ValueListenableBuilder<Box<Nota>>(
         valueListenable: box.listenable(),
         builder: (context, box, _) {
@@ -71,18 +110,23 @@ final VoidCallback toggleTheme;
           }
 
           final int itemCount = box.length;
-
+          // Invertendo a ordem para exibir as notas mais recentes primeiro
+          final reversedKeys = box.keys.toList().reversed.toList();
+          
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: itemCount,
             itemBuilder: (context, index) {
-              final int reversedIndex = itemCount - 1 - index;
-              final Nota? nota = box.getAt(reversedIndex);
-
+              final key = reversedKeys[index];
+              final Nota? nota = box.get(key); // Obtém a nota pela chave
+              
               if (nota == null) return const SizedBox.shrink();
 
+              // Como estamos usando a chave real do Hive, vamos usar o key para o Dismissible
+              final dismissibleKey = Key(key.toString()); 
+
               return Dismissible(
-                key: Key('nota_$reversedIndex'),
+                key: dismissibleKey,
                 background: Container(
                   color: Colors.red,
                   alignment: Alignment.centerLeft,
@@ -91,17 +135,44 @@ final VoidCallback toggleTheme;
                 ),
                 direction: DismissDirection.startToEnd,
                 onDismissed: (_) async {
-                  await box.deleteAt(reversedIndex);
+                  await box.delete(key); // Deleta pela chave
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Anotação removida')),
                   );
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: NoteCard(
                     nota: nota,
-                    onTap: () {},
+                    
+                    // 2. CORREÇÃO DE RENDERIZAÇÃO: Torna o onTap assíncrono
+                    onTap: () async {
+                      // Aguarda o retorno da EditNotePage
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditNotePage(nota: nota),
+                        ),
+                      );
+                      
+                      // Força a re-renderização do widget pai (HomePage) 
+                      // para garantir que a nota mais atualizada seja exibida, 
+                      // caso o ValueListenableBuilder não tenha reagido imediatamente.
+                      setState(() {
+                        // O corpo vazio é suficiente para forçar a reconstrução
+                      });
+                    },
+                    
+                    onDelete: () async {
+                      // Usando o .delete(key) é mais seguro que .deleteAt()
+                      await box.delete(key); 
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Anotação removida')),
+                      );
+                    },
                   ),
                 ),
               );
@@ -112,10 +183,14 @@ final VoidCallback toggleTheme;
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {
+          // Também adicionamos await e setState aqui para garantir que a lista atualize
+          // se você voltar da página de criação
           await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const CreateNotePage()),
           );
+          
+          setState(() {}); 
         },
       ),
     );
