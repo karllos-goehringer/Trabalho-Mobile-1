@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/NotaClass.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 
 class CreateNotePage extends StatefulWidget {
   const CreateNotePage({super.key});
@@ -15,33 +16,30 @@ class CreateNotePage extends StatefulWidget {
 class _CreateNotePageState extends State<CreateNotePage> {
   final _titleController = TextEditingController();
   final _textController = TextEditingController();
-  String? imagePath;
+  Uint8List? imageBytes;
 
-  final String _selectedDate =
-      DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+  final String _selectedDate = DateFormat(
+    'dd/MM/yyyy HH:mm',
+  ).format(DateTime.now());
 
-Future<void> pickImage() async {
-  final ImagePicker picker = ImagePicker();
-  final XFile? capturedImage = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-  if (capturedImage == null) return; // usuário cancelou
-  final Directory appDir = await Directory.systemTemp.createTemp();
-  final String newPath = "${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.png";
+    if (image == null) return;
 
-  final File newImage = await File(capturedImage.path).copy(newPath);
+    final bytes = await image.readAsBytes(); // <- lê bytes
 
-  setState(() {
-    imagePath = newImage.path; // salva o caminho que será guardado no Hive
-  });
-}
+    setState(() {
+      imageBytes = bytes; // <- armazena para salvar no Hive
+    });
+  }
 
   void saveNote() async {
     if (_titleController.text.isEmpty || _textController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Preencha título e texto!"),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Preencha título e texto!")));
       return;
     }
 
@@ -49,7 +47,7 @@ Future<void> pickImage() async {
       titulo: _titleController.text,
       texto: _textController.text,
       momentoCadastro: _selectedDate,
-      imagePath: imagePath,
+      imageBytes: imageBytes,
     );
 
     // --- SALVAR NO HIVE (nome correto: notaBox) ---
@@ -65,10 +63,7 @@ Future<void> pickImage() async {
       appBar: AppBar(
         title: const Text("Nova Anotação"),
         actions: [
-          IconButton(
-            onPressed: saveNote,
-            icon: const Icon(Icons.check),
-          ),
+          IconButton(onPressed: saveNote, icon: const Icon(Icons.check)),
         ],
       ),
       body: Padding(
@@ -77,27 +72,28 @@ Future<void> pickImage() async {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: "Título",
-              ),
+              decoration: const InputDecoration(labelText: "Título"),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _textController,
-              decoration: const InputDecoration(
-                labelText: "Texto",
-              ),
+              decoration: const InputDecoration(labelText: "Texto"),
               maxLines: 6,
             ),
             const SizedBox(height: 20),
 
-            if (imagePath != null)
+            TextButton.icon(
+              onPressed: pickImage,
+              icon: const Icon(Icons.image),
+              label: const Text("Adicionar imagem"),
+            ),
+            if (imageBytes != null)
               Column(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      File(imagePath!),
+                    child: Image.memory(
+                      imageBytes!,
                       height: 200,
                       fit: BoxFit.cover,
                     ),
@@ -105,12 +101,6 @@ Future<void> pickImage() async {
                   const SizedBox(height: 12),
                 ],
               ),
-
-            TextButton.icon(
-              onPressed: pickImage,
-              icon: const Icon(Icons.image),
-              label: const Text("Adicionar imagem"),
-            ),
           ],
         ),
       ),

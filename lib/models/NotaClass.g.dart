@@ -20,7 +20,7 @@ class NotaAdapter extends TypeAdapter<Nota> {
       titulo: fields[0] as String,
       texto: fields[1] as String,
       momentoCadastro: fields[2] as String,
-      imagePath: fields[3] as String?,
+      imageBytes: fields[3] as Uint8List?,
     );
   }
 
@@ -35,7 +35,7 @@ class NotaAdapter extends TypeAdapter<Nota> {
       ..writeByte(2)
       ..write(obj.momentoCadastro)
       ..writeByte(3)
-      ..write(obj.imagePath);
+      ..write(obj.imageBytes);
   }
 
   @override

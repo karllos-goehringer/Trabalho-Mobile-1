@@ -1,16 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/NotaClass.dart';
-
+import 'dart:typed_data';
 class NoteCard extends StatelessWidget {
   final Nota nota;
-  final VoidCallback? onTap; // caso queira abrir detalhes depois
+  final VoidCallback? onTap;
 
-  const NoteCard({
-    super.key,
-    required this.nota,
-    this.onTap,
-  });
+  const NoteCard({super.key, required this.nota, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -18,16 +14,13 @@ class NoteCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
               Text(
                 nota.titulo,
                 style: const TextStyle(
@@ -40,10 +33,7 @@ class NoteCard extends StatelessWidget {
 
               Text(
                 "Criado em: ${nota.momentoCadastro}",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
               ),
 
               const SizedBox(height: 12),
@@ -57,14 +47,14 @@ class NoteCard extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              if (nota.imagePath != null)
+              if (nota.imageBytes != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(nota.imagePath!),
+                  child: Image.memory(
+                    nota.imageBytes!,
                     height: 150,
                     width: double.infinity,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                   ),
                 ),
             ],
