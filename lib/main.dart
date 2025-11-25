@@ -9,8 +9,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   await Hive.initFlutter();
-  Hive.registerAdapter(NotaAdapter());
-  var boxAnotacoes = await Hive.openBox<Nota>('notaBox');
+  Hive.registerAdapter(TarefaAdapter());
+  var boxAnotacoes = await Hive.openBox<Tarefa>('notaBox');
   runApp(MyApp());
 }
 
