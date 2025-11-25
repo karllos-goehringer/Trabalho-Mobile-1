@@ -1,10 +1,7 @@
-import 'dart:io';
-import 'package:app_trabalho/models/NotaClass.dart';
 import 'package:app_trabalho/models/TarefaClass.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
 
 class CreateTarefaPage extends StatefulWidget {
   const CreateTarefaPage({super.key});
@@ -40,8 +37,8 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
     );
     
     // --- SALVAR NO HIVE (nome correto: notaBox) ---
-    final notaBox = Hive.box<Tarefa>('notaBox');
-    await notaBox.add(tarefa);
+    final tarefaBox = Hive.box<Tarefa>('tarefaBox');
+    await tarefaBox.add(tarefa);
     Navigator.pop(context, tarefa);
   }
 

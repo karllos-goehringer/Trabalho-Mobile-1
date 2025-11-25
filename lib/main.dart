@@ -1,16 +1,31 @@
 import 'package:app_trabalho/models/NotaClass.dart';
+import 'package:app_trabalho/models/TarefaClass.dart'; // Importa o modelo de Tarefa
 import 'package:app_trabalho/pages/EditNotaCard.dart';
 import 'package:app_trabalho/pages/FormAddNotaCard.dart';
+import 'package:app_trabalho/pages/TarefaPage.dart'; // Importa a página de Tarefas
 import 'package:app_trabalho/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+// ====================================================================
+// REGISTRO E INICIALIZAÇÃO CORRETA DO HIVE
+// ====================================================================
+
 void main() async {
   await Hive.initFlutter();
-  Hive.registerAdapter(TarefaAdapter());
-  var boxAnotacoes = await Hive.openBox<Tarefa>('notaBox');
+  
+  // Registrar Adapters
+  Hive.registerAdapter(NotaAdapter()); 
+  Hive.registerAdapter(TarefaAdapter()); 
+  
+  // Abrir a box de Notas
+  await Hive.openBox<Nota>('notaBox');
+  
+  // NOVO: Abrir a box de Tarefas separadamente para evitar HiveError
+  await Hive.openBox<Tarefa>('tarefaBox');
+
   runApp(MyApp());
 }
 
@@ -67,8 +82,13 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
+// ====================================================================
+// HOMEPAGE COM NAVEGAÇÃO
+// ====================================================================
+
 class HomePage extends StatefulWidget {
-  final VoidCallback toggleTheme; // Mantém a propriedade para trocar o tema
+  final VoidCallback toggleTheme;
 
   const HomePage({super.key, required this.toggleTheme});
 
@@ -77,133 +97,77 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // A box Hive, inicializada no initState da sua aplicação principal
+  
   late Box<Nota> notaBox;
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Índice 0: Anotações, Índice 1: Tarefas
+
+  // DEFINIÇÃO DAS TELAS
+  late final List<Widget> _widgetOptions;
+
   @override
   void initState() {
     super.initState();
-    // É crucial que a box esteja aberta antes de tentar usá-la
+    // Apenas a box de Notas é necessária diretamente aqui.
     notaBox = Hive.box<Nota>('notaBox'); 
+    
+    // Inicializa a lista de widgets
+    _widgetOptions = <Widget>[
+      // Tela 1: Anotações (usando o widget de conteúdo de notas)
+      _NotesContent(notaBox: notaBox), 
+      // Tela 2: Tarefas
+      const TarefaPage(), 
+    ];
   }
-  // Função para mudar o índice selecionado
+  
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
+  
+  // Função para lidar com o FAB (Botão Flutuante de Ação)
+  void _onFabPressed() async {
+    final page = _selectedIndex == 0
+        ? const CreateNotePage() 
+        : const CreateTarefaPage(); // Página de criação de tarefas (do TarefaPage.dart)
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+    
+    setState(() {}); // Força a atualização após voltar
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Acessa a box diretamente aqui, já que está inicializada
-    final box = notaBox; 
-    final bool isNotesPage = _selectedIndex == 0;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Minhas Anotações'),
+        // Título dinâmico
+        title: Text(_selectedIndex == 0 ? 'Minhas Anotações' : 'Minhas Tarefas'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.brightness_6),
-            onPressed: widget.toggleTheme, // Acesso via widget.toggleTheme
+            onPressed: widget.toggleTheme, 
           ),
         ],
       ),
-      body: ValueListenableBuilder<Box<Nota>>(
-        valueListenable: box.listenable(),
-        builder: (context, box, _) {
-          if (box.isEmpty) {
-            return const Center(child: Text('Nenhuma anotação encontrada.'));
-          }
-
-          final int itemCount = box.length;
-          // Invertendo a ordem para exibir as notas mais recentes primeiro
-          final reversedKeys = box.keys.toList().reversed.toList();
-          
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              final key = reversedKeys[index];
-              final Nota? nota = box.get(key); // Obtém a nota pela chave
-              
-              if (nota == null) return const SizedBox.shrink();
-
-              // Como estamos usando a chave real do Hive, vamos usar o key para o Dismissible
-              final dismissibleKey = Key(key.toString()); 
-
-              return Dismissible(
-                key: dismissibleKey,
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 16),
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                direction: DismissDirection.startToEnd,
-                onDismissed: (_) async {
-                  await box.delete(key); // Deleta pela chave
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Anotação removida')),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  child: NoteCard(
-                    nota: nota,
-                    
-                    // 2. CORREÇÃO DE RENDERIZAÇÃO: Torna o onTap assíncrono
-                    onTap: () async {
-                      // Aguarda o retorno da EditNotePage
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditNotePage(nota: nota),
-                        ),
-                      );
-                      
-                      // Força a re-renderização do widget pai (HomePage) 
-                      // para garantir que a nota mais atualizada seja exibida, 
-                      // caso o ValueListenableBuilder não tenha reagido imediatamente.
-                      setState(() {
-                        // O corpo vazio é suficiente para forçar a reconstrução
-                      });
-                    },
-                    
-                    onDelete: () async {
-                      // Usando o .delete(key) é mais seguro que .deleteAt()
-                      await box.delete(key); 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Anotação removida')),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+      // CORPO: Exibe a tela selecionada
+      body: _widgetOptions.elementAt(_selectedIndex), 
+      
       floatingActionButton: FloatingActionButton(
+        onPressed: _onFabPressed,
         child: const Icon(Icons.add),
-        onPressed: () async {
-          // Também adicionamos await e setState aqui para garantir que a lista atualize
-          // se você voltar da página de criação
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateNotePage()),
-          );
-          
-          setState(() {}); 
-        },
       ),
-     bottomNavigationBar: BottomNavigationBar(
+      
+      // BARRA DE NAVEGAÇÃO INFERIOR
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped, // Chamamos o método para mudar o estado
-        selectedItemColor: Theme.of(context).colorScheme.primary, // Cor quando selecionado
-        unselectedItemColor: Colors.grey, // Cor quando não selecionado
+        onTap: _onItemTapped, 
+        selectedItemColor: Theme.of(context).colorScheme.primary, 
+        unselectedItemColor: Colors.grey, 
         items: const [
           BottomNavigationBarItem(
             label: 'Anotações',
@@ -212,11 +176,90 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             label: 'Tarefas',
-            icon: Icon(Icons.shopping_bag_outlined),
-            activeIcon: Icon(Icons.shopping_bag),
+            icon: Icon(Icons.check_circle_outline),
+            activeIcon: Icon(Icons.check_circle),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ====================================================================
+// WIDGET SEPARADO PARA CONTEÚDO DE ANOTAÇÕES
+// Este código foi extraído da HomePage original.
+// ====================================================================
+
+class _NotesContent extends StatelessWidget {
+  final Box<Nota> notaBox;
+
+  const _NotesContent({required this.notaBox});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Box<Nota>>(
+      valueListenable: notaBox.listenable(),
+      builder: (context, box, _) {
+        if (box.isEmpty) {
+          return const Center(child: Text('Nenhuma anotação encontrada.'));
+        }
+
+        final int itemCount = box.length;
+        final reversedKeys = box.keys.toList().reversed.toList();
+        
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            final key = reversedKeys[index];
+            final Nota? nota = box.get(key); 
+            
+            if (nota == null) return const SizedBox.shrink();
+
+            final dismissibleKey = Key(key.toString()); 
+
+            return Dismissible(
+              key: dismissibleKey,
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 16),
+                child: const Icon(Icons.delete, color: Colors.white),
+              ),
+              direction: DismissDirection.startToEnd,
+              onDismissed: (_) async {
+                await box.delete(key); 
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Anotação removida')),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: NoteCard(
+                  nota: nota,
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditNotePage(nota: nota),
+                      ),
+                    );
+                  },
+                  onDelete: () async {
+                    await box.delete(key); 
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Anotação removida')),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
