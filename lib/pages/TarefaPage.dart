@@ -143,6 +143,11 @@ class _TarefaPageState extends State<TarefaPage> {
 
   void _deleteTarefa(dynamic key) async {
     await tarefaBox.delete(key);
+    // Para garantir que o alarme seja parado ao deletar
+    final Tarefa? tarefa = tarefaBox.get(key);
+    if (tarefa != null) {
+      await Alarm.stop(tarefa.id);
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Tarefa removida')));
@@ -154,8 +159,26 @@ class _TarefaPageState extends State<TarefaPage> {
       titulo: tarefa.titulo,
       momentoCadastro: tarefa.momentoCadastro,
       concluida: newValue,
+      dataAlarme: tarefa.dataAlarme,
     );
     await tarefaBox.put(key, updatedTarefa);
+
+    if (newValue == true) {
+      await Alarm.stop(tarefa.id);
+    }
+  }
+
+  void _navigateToEditTask(dynamic key, Tarefa tarefa) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TarefaFormPage(
+          tarefa: tarefa,
+          hiveKey: key,
+        ),
+      ),
+    );
+
   }
 
   @override
@@ -208,14 +231,8 @@ class _TarefaPageState extends State<TarefaPage> {
                 child: TarefaCard(
                   tarefa: tarefa,
                   onTap: () async {
-                    final updatedTarefa = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TarefaFormPage(tarefa: tarefa),
-                      ),
-                    );
-
-                    if (updatedTarefa != null) {}
+                    // 🎯 USA O MÉTODO DE EDIÇÃO E PASSA A CHAVE
+                    _navigateToEditTask(key, tarefa);
                   },
                   onToggleComplete: (newValue) =>
                       _toggleComplete(key, tarefa, newValue),
@@ -226,14 +243,23 @@ class _TarefaPageState extends State<TarefaPage> {
           );
         },
       ),
+      // Se houver um FloatingActionButton que abre o formulário:
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => const TarefaFormPage()),
+      //   ),
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 }
 
 class TarefaFormPage extends StatefulWidget {
-  final Tarefa? tarefa; // Tarefa opcional para edição
+  final Tarefa? tarefa; 
+  final dynamic hiveKey; 
 
-  const TarefaFormPage({super.key, this.tarefa});
+  const TarefaFormPage({super.key, this.tarefa, this.hiveKey});
 
   @override
   State<TarefaFormPage> createState() => _TarefaFormPageState();
@@ -241,29 +267,32 @@ class TarefaFormPage extends StatefulWidget {
 
 class _TarefaFormPageState extends State<TarefaFormPage> {
   final _titleController = TextEditingController();
-  late bool _concluida; // Usar late para inicializar no initState
-  late String _momentoCadastro; // Usar late
-  late int _id; // Usar late
+  late bool _concluida;
+  late String _momentoCadastro;
+  late int _id;
 
   DateTime? _selectedAlarmDateTime;
-  Tarefa?
-  _tarefaOriginal; // Referência à tarefa original para salvar a referência Hive
+
+  // 🎯 Campo para armazenar a chave do Hive para PUT
+  dynamic _tarefaHiveKey;
 
   @override
   void initState() {
     super.initState();
-    _tarefaOriginal = widget.tarefa;
 
-    // 3. Inicializar os controladores e estados com os dados da tarefa, se houver.
-    if (_tarefaOriginal != null) {
-      _id = _tarefaOriginal!.id;
-      _titleController.text = _tarefaOriginal!.titulo;
-      _concluida = _tarefaOriginal!.concluida;
-      _selectedAlarmDateTime = _tarefaOriginal!.dataAlarme;
-      _momentoCadastro = _tarefaOriginal!.momentoCadastro;
+    // 🎯 Pega a chave do Hive para uso no saveOrUpdateNote
+    _tarefaHiveKey = widget.hiveKey; 
+
+    // Inicializar os controladores e estados com os dados da tarefa, se houver.
+    if (widget.tarefa != null) {
+      _id = widget.tarefa!.id;
+      _titleController.text = widget.tarefa!.titulo;
+      _concluida = widget.tarefa!.concluida;
+      _selectedAlarmDateTime = widget.tarefa!.dataAlarme;
+      _momentoCadastro = widget.tarefa!.momentoCadastro;
     } else {
       // Modo Criação
-      _id = 0; // Será recalculado ao salvar ou será o hashCode do título.
+      _id = 0; 
       _concluida = false;
       _momentoCadastro = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
     }
@@ -283,16 +312,12 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
   }
 
   Future<void> _pickDateTime() async {
-    DateTime initialDate =
-        _selectedAlarmDateTime ??
-        DateTime.now().add(const Duration(minutes: 1));
+    DateTime initialDate = _selectedAlarmDateTime ?? DateTime.now().add(const Duration(minutes: 1));
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate: DateTime.now().subtract(
-        const Duration(days: 365),
-      ), // Permite escolher datas passadas para edição
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
@@ -324,7 +349,6 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
     });
   }
 
-  // 4. Lógica de salvar/atualizar
   void saveOrUpdateNote() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
@@ -333,12 +357,9 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
       return;
     }
 
-    // Cria/Atualiza o objeto Tarefa
     final newOrUpdatedTarefa = Tarefa(
-      // Se for edição, mantém o ID e a chave. Se for criação, usa o hashCode do título.
-      id: _tarefaOriginal != null
-          ? _tarefaOriginal!.id
-          : _titleController.text.hashCode,
+      // Mantém o ID original (que é o ID do alarme) se for edição
+      id: widget.tarefa != null ? widget.tarefa!.id : _titleController.text.hashCode, 
       titulo: _titleController.text,
       momentoCadastro: _momentoCadastro,
       concluida: _concluida,
@@ -347,14 +368,19 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
 
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
 
-    await Alarm.stop(newOrUpdatedTarefa.id);
+    // Sempre tenta parar o alarme antigo, caso o ID não tenha mudado.
+    await Alarm.stop(newOrUpdatedTarefa.id); 
 
-    if (_tarefaOriginal != null) {
-      await tarefaBox.put(newOrUpdatedTarefa.id, newOrUpdatedTarefa);
+    // 🎯 LÓGICA DE SALVAR CORRIGIDA
+    if (widget.tarefa != null) {
+      // MODO EDIÇÃO: Usa a CHAVE DO HIVE recebida
+      await tarefaBox.put(_tarefaHiveKey, newOrUpdatedTarefa);
     } else {
-      // MODO CRIAÇÃO: Adiciona uma nova tarefa.
+      // MODO CRIAÇÃO: Usa ADD (Hive gera a chave)
       await tarefaBox.add(newOrUpdatedTarefa);
     }
+
+    // 5. Lógica de SET do Alarme
     if (newOrUpdatedTarefa.dataAlarme != null && newOrUpdatedTarefa.dataAlarme!.isAfter(DateTime.now()) && !newOrUpdatedTarefa.concluida) {
       final settings = AlarmSettings(
         id: newOrUpdatedTarefa.id,
@@ -373,7 +399,6 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
       await Alarm.set(alarmSettings: settings);
     }
 
-    // Retorna para a página anterior, passando a tarefa atualizada/criada
     Navigator.pop(context, newOrUpdatedTarefa);
   }
 
