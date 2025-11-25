@@ -21,6 +21,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+
 class _MyAppState extends State<MyApp> {
   ThemeMode themeMode = ThemeMode.light;
 
@@ -78,19 +79,24 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // A box Hive, inicializada no initState da sua aplicação principal
   late Box<Nota> notaBox;
-
+  int _selectedIndex = 0;
   @override
   void initState() {
     super.initState();
     // É crucial que a box esteja aberta antes de tentar usá-la
     notaBox = Hive.box<Nota>('notaBox'); 
   }
-
+  // Função para mudar o índice selecionado
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     // Acessa a box diretamente aqui, já que está inicializada
     final box = notaBox; 
-
+    final bool isNotesPage = _selectedIndex == 0;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Anotações'),
@@ -192,6 +198,24 @@ class _HomePageState extends State<HomePage> {
           
           setState(() {}); 
         },
+      ),
+     bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped, // Chamamos o método para mudar o estado
+        selectedItemColor: Theme.of(context).colorScheme.primary, // Cor quando selecionado
+        unselectedItemColor: Colors.grey, // Cor quando não selecionado
+        items: const [
+          BottomNavigationBarItem(
+            label: 'Anotações',
+            icon: Icon(Icons.note_alt_outlined),
+            activeIcon: Icon(Icons.note_alt),
+          ),
+          BottomNavigationBarItem(
+            label: 'Tarefas',
+            icon: Icon(Icons.shopping_bag_outlined),
+            activeIcon: Icon(Icons.shopping_bag),
+          ),
+        ],
       ),
     );
   }

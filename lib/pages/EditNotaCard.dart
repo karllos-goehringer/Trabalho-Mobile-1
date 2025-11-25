@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_quill/flutter_quill.dart'; // Para o editor
 import '../models/NotaClass.dart'; // O modelo de dados Nota
 import 'package:intl/intl.dart';

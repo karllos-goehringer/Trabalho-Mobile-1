@@ -1,9 +1,8 @@
-import 'dart:io';
-import 'dart:convert'; // Import necessário para jsonEncode()
+import 'dart:convert'; // Import  para jsonEncode()
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_quill/flutter_quill.dart'; // Import do Quill
-import '../models/NotaClass.dart'; // Modelo Nota
+import 'package:flutter_quill/flutter_quill.dart'; 
+import '../models/NotaClass.dart'; 
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
@@ -12,7 +11,6 @@ import 'package:flutter/widgets.dart';
 
 class CreateNotePage extends StatefulWidget {
   const CreateNotePage({super.key});
-
   @override
   State<CreateNotePage> createState() => _CreateNotePageState();
 }
@@ -31,7 +29,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
   @override
   void dispose() {
     _titleController.dispose();
-    _quillController.dispose(); // Não esqueça de descartar o QuillController
+    _quillController.dispose();
     super.dispose();
   }
 
