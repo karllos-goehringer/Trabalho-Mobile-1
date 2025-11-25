@@ -16,10 +16,12 @@ class CreateNotePage extends StatefulWidget {
 
 class _CreateNotePageState extends State<CreateNotePage> {
   final _titleController = TextEditingController();
-  final QuillController _quillController = QuillController.basic(); 
+  final QuillController _quillController = QuillController.basic();
   Uint8List? imageBytes;
 
-  final String _selectedDate = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+  final String _selectedDate = DateFormat(
+    'dd/MM/yyyy HH:mm',
+  ).format(DateTime.now());
 
   @override
   void dispose() {
@@ -39,7 +41,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
       imageBytes = bytes;
     });
   }
-  
+
   void removeImage() {
     setState(() {
       imageBytes = null;
@@ -48,14 +50,21 @@ class _CreateNotePageState extends State<CreateNotePage> {
 
   void saveNote() async {
     if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
       return;
     }
-    
-    final richTextJson = jsonEncode(_quillController.document.toDelta().toJson());
 
-    if (_quillController.document.toPlainText().trim().isEmpty && imageBytes == null) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("A nota não pode estar vazia!")));
+    final richTextJson = jsonEncode(
+      _quillController.document.toDelta().toJson(),
+    );
+
+    if (_quillController.document.toPlainText().trim().isEmpty &&
+        imageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("A nota não pode estar vazia!")),
+      );
       return;
     }
 
@@ -79,9 +88,9 @@ class _CreateNotePageState extends State<CreateNotePage> {
     final isDark = colorScheme.brightness == Brightness.dark;
 
     final editorBackgroundColor = colorScheme.surface;
-    final toolbarBackgroundColor = isDark 
-        ? colorScheme.surfaceContainerHighest 
-        : colorScheme.surfaceContainer; 
+    final toolbarBackgroundColor = isDark
+        ? colorScheme.surfaceContainerHighest
+        : colorScheme.surfaceContainer;
     final borderColor = colorScheme.outlineVariant;
 
     return Scaffold(
@@ -112,7 +121,9 @@ class _CreateNotePageState extends State<CreateNotePage> {
                   decoration: BoxDecoration(
                     color: toolbarBackgroundColor,
                     border: Border.all(color: borderColor),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(8)), 
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(8),
+                    ),
                   ),
                   child: QuillSimpleToolbar(
                     controller: _quillController,
@@ -123,20 +134,23 @@ class _CreateNotePageState extends State<CreateNotePage> {
                     ),
                   ),
                 ),
-                
+
                 Container(
                   height: editorHeight,
                   decoration: BoxDecoration(
                     color: editorBackgroundColor,
                     border: Border.all(color: borderColor),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(8),
+                    ),
                   ),
                   child: QuillEditor(
                     controller: _quillController,
                     config: QuillEditorConfig(
                       checkBoxReadOnly: false,
                       padding: const EdgeInsets.all(12),
-                      placeholder: 'Digite o conteúdo da nota com formatação aqui...',
+                      placeholder:
+                          'Digite o conteúdo da nota com formatação aqui...',
                     ),
                     focusNode: FocusNode(),
                     scrollController: ScrollController(),
@@ -144,7 +158,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
 
             Row(
@@ -162,7 +176,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
                   ),
               ],
             ),
-            
+
             if (imageBytes != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12.0),

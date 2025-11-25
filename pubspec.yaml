@@ -1,5 +1,5 @@
-name: app_trabalho
-description: "A new Flutter project."
+name: NoteTask
+description: "Notepad integrado a Tarefas"
 publish_to: 'none'
 version: 0.1.0
 
@@ -15,6 +15,7 @@ dependencies:
   image_picker: ^1.2.1
   image: ^4.5.4
   flutter_localization:
+  alarm:
 
 dev_dependencies:
   flutter_test:
@@ -28,3 +29,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/alarm.mp3

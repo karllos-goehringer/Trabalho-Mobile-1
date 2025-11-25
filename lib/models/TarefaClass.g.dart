@@ -17,22 +17,28 @@ class TarefaAdapter extends TypeAdapter<Tarefa> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Tarefa(
-      titulo: fields[0] as String,
-      concluida: fields[1] as bool,
-      momentoCadastro: fields[2] as String,
+      id: fields[0] as int,
+      titulo: fields[1] as String,
+      concluida: fields[2] as bool,
+      momentoCadastro: fields[3] as String,
+      dataAlarme: fields[4] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Tarefa obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.titulo)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.concluida)
+      ..write(obj.titulo)
       ..writeByte(2)
-      ..write(obj.momentoCadastro);
+      ..write(obj.concluida)
+      ..writeByte(3)
+      ..write(obj.momentoCadastro)
+      ..writeByte(4)
+      ..write(obj.dataAlarme);
   }
 
   @override

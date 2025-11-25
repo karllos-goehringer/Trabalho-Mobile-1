@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart'; 
+import 'package:flutter_quill/flutter_quill.dart';
 import '../models/NotaClass.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,13 +18,13 @@ class EditNotePage extends StatefulWidget {
 class _EditNotePageState extends State<EditNotePage> {
   late TextEditingController _titleController;
   late QuillController _quillController;
-  
+
   Uint8List? imageBytes;
-  
+
   @override
   void initState() {
     super.initState();
-        _titleController = TextEditingController(text: widget.nota.titulo);
+    _titleController = TextEditingController(text: widget.nota.titulo);
 
     try {
       final docJson = jsonDecode(widget.nota.texto);
@@ -34,7 +34,11 @@ class _EditNotePageState extends State<EditNotePage> {
         selection: const TextSelection.collapsed(offset: 0),
       );
     } catch (e) {
-      final document = Document()..insert(0, 'Erro ao carregar conteúdo de texto rico. Texto original: ${widget.nota.texto}');
+      final document = Document()
+        ..insert(
+          0,
+          'Erro ao carregar conteúdo de texto rico. Texto original: ${widget.nota.texto}',
+        );
       _quillController = QuillController(
         document: document,
         selection: const TextSelection.collapsed(offset: 0),
@@ -62,7 +66,7 @@ class _EditNotePageState extends State<EditNotePage> {
       imageBytes = bytes;
     });
   }
-  
+
   void removeImage() {
     setState(() {
       imageBytes = null;
@@ -71,45 +75,52 @@ class _EditNotePageState extends State<EditNotePage> {
 
   void saveNote() async {
     if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha o título!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
       return;
     }
-    
-    final richTextJson = jsonEncode(_quillController.document.toDelta().toJson());
+
+    final richTextJson = jsonEncode(
+      _quillController.document.toDelta().toJson(),
+    );
 
     if (_quillController.document.toPlainText().trim().isEmpty) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("O texto da nota não pode estar vazio!")),
       );
       return;
     }
     widget.nota.titulo = _titleController.text;
-    widget.nota.texto = richTextJson; 
+    widget.nota.texto = richTextJson;
     widget.nota.imageBytes = imageBytes;
-    
-    final _momentoEdicao = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+
+    final _momentoEdicao = DateFormat(
+      'dd/MM/yyyy HH:mm',
+    ).format(DateTime.now());
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nota '${widget.nota.titulo}' atualizada em $_momentoEdicao")),
+      SnackBar(
+        content: Text(
+          "Nota '${widget.nota.titulo}' atualizada em $_momentoEdicao",
+        ),
+      ),
     );
-    
+
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    const double editorHeight = 300; 
+    const double editorHeight = 300;
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
 
     // Define as cores dinâmicas
     final editorBackgroundColor = colorScheme.surface;
-    final toolbarBackgroundColor = isDark 
-        ? colorScheme.surfaceContainerHighest 
-        : colorScheme.surfaceContainer; 
+    final toolbarBackgroundColor = isDark
+        ? colorScheme.surfaceContainerHighest
+        : colorScheme.surfaceContainer;
     final borderColor = colorScheme.outlineVariant;
-
 
     return Scaffold(
       appBar: AppBar(
@@ -126,7 +137,7 @@ class _EditNotePageState extends State<EditNotePage> {
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(labelText: "Título"),
-              style: TextStyle(color: colorScheme.onSurface), 
+              style: TextStyle(color: colorScheme.onSurface),
             ),
             // Informação da criação/edição
             Padding(
@@ -134,7 +145,7 @@ class _EditNotePageState extends State<EditNotePage> {
               child: Text(
                 "Criado em: ${widget.nota.momentoCadastro}",
                 style: TextStyle(
-                  fontSize: 13, 
+                  fontSize: 13,
                   color: colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
@@ -146,9 +157,11 @@ class _EditNotePageState extends State<EditNotePage> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: toolbarBackgroundColor, 
-                    border: Border.all(color: borderColor), 
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(8)), 
+                    color: toolbarBackgroundColor,
+                    border: Border.all(color: borderColor),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(8),
+                    ),
                   ),
                   child: QuillSimpleToolbar(
                     controller: _quillController,
@@ -161,27 +174,30 @@ class _EditNotePageState extends State<EditNotePage> {
                     ),
                   ),
                 ),
-                
+
                 Container(
-                  height: editorHeight, 
+                  height: editorHeight,
                   decoration: BoxDecoration(
-                    color: editorBackgroundColor, 
-                    border: Border.all(color: borderColor), 
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                    color: editorBackgroundColor,
+                    border: Border.all(color: borderColor),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(8),
+                    ),
                   ),
                   child: QuillEditor(
                     controller: _quillController,
                     config: QuillEditorConfig(
                       checkBoxReadOnly: false,
                       padding: const EdgeInsets.all(12),
-                      placeholder: 'Digite o conteúdo da nota com formatação aqui...',
+                      placeholder:
+                          'Digite o conteúdo da nota com formatação aqui...',
                       customStyles: DefaultStyles(
                         paragraph: DefaultTextBlockStyle(
-                          TextStyle(color: colorScheme.onSurface), 
-                          const HorizontalSpacing(0, 0), 
-                          const VerticalSpacing(0, 0), 
+                          TextStyle(color: colorScheme.onSurface),
+                          const HorizontalSpacing(0, 0),
                           const VerticalSpacing(0, 0),
-                          null, 
+                          const VerticalSpacing(0, 0),
+                          null,
                         ),
                       ),
                     ),
@@ -191,9 +207,9 @@ class _EditNotePageState extends State<EditNotePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             Row(
               children: [
                 TextButton.icon(

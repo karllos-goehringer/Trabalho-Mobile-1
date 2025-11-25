@@ -1,31 +1,25 @@
-import 'package:app_trabalho/models/NotaClass.dart';
-import 'package:app_trabalho/models/TarefaClass.dart'; // Importa o modelo de Tarefa
-import 'package:app_trabalho/pages/EditNotaCard.dart';
-import 'package:app_trabalho/pages/FormAddNotaCard.dart';
-import 'package:app_trabalho/pages/TarefaPage.dart'; // Importa a página de Tarefas
-import 'package:app_trabalho/widgets/NotaCard.dart';
+
+import 'package:NoteTask/models/NotaClass.dart';
+import 'package:NoteTask/models/TarefaClass.dart';
+import 'package:NoteTask/pages/EditNotaCard.dart';
+import 'package:NoteTask/pages/FormAddNotaCard.dart';
+import 'package:NoteTask/pages/FormAddTarefaCard.dart';
+import 'package:NoteTask/pages/TarefaPage.dart';
+import 'package:NoteTask/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
-// ====================================================================
-// REGISTRO E INICIALIZAÇÃO CORRETA DO HIVE
-// ====================================================================
+import 'package:alarm/alarm.dart';
 
 void main() async {
   await Hive.initFlutter();
-  
-  // Registrar Adapters
-  Hive.registerAdapter(NotaAdapter()); 
-  Hive.registerAdapter(TarefaAdapter()); 
-  
-  // Abrir a box de Notas
+  Hive.registerAdapter(NotaAdapter());
+  Hive.registerAdapter(TarefaAdapter());
   await Hive.openBox<Nota>('notaBox');
-  
-  // NOVO: Abrir a box de Tarefas separadamente para evitar HiveError
   await Hive.openBox<Tarefa>('tarefaBox');
-
+  WidgetsFlutterBinding.ensureInitialized();
+  await Alarm.init();
   runApp(MyApp());
 }
 
@@ -35,7 +29,6 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
 
 class _MyAppState extends State<MyApp> {
   ThemeMode themeMode = ThemeMode.dark;
@@ -68,24 +61,16 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       localizationsDelegates: const [
-        // Delegados globais (padrão)
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         FlutterQuillLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en', 'US'), // Inglês como fallback
-        Locale('pt', 'BR'), // Português (se você quiser a tradução do Quill)
-      ],
+      supportedLocales: const [Locale('en', 'US'), Locale('pt', 'BR')],
       home: HomePage(toggleTheme: toggleTheme),
     );
   }
 }
-
-// ====================================================================
-// HOMEPAGE COM NAVEGAÇÃO
-// ====================================================================
 
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -97,74 +82,66 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  
   late Box<Nota> notaBox;
-  int _selectedIndex = 0; // Índice 0: Anotações, Índice 1: Tarefas
-
-  // DEFINIÇÃO DAS TELAS
+  int _selectedIndex = 0;
   late final List<Widget> _widgetOptions;
 
   @override
   void initState() {
     super.initState();
     // Apenas a box de Notas é necessária diretamente aqui.
-    notaBox = Hive.box<Nota>('notaBox'); 
-    
+    notaBox = Hive.box<Nota>('notaBox');
+
     // Inicializa a lista de widgets
     _widgetOptions = <Widget>[
-      _NotesContent(notaBox: notaBox), 
-      const TarefaPage(), 
+      _NotesContent(notaBox: notaBox),
+      const TarefaPage(),
     ];
   }
-  
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
-  
+
   void _onFabPressed() async {
     final page = _selectedIndex == 0
-        ? const CreateNotePage() 
+        ? const CreateNotePage()
         : const CreateTarefaPage();
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
-    
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(
-        // Título dinâmico
-        title: Text(_selectedIndex == 0 ? 'Minhas Anotações' : 'Minhas Tarefas'),
+        title: Text(
+          _selectedIndex == 0 ? 'Minhas Anotações' : 'Minhas Tarefas',
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.brightness_6),
-            onPressed: widget.toggleTheme, 
+            onPressed: widget.toggleTheme,
           ),
         ],
       ),
-      // CORPO: Exibe a tela selecionada
-      body: _widgetOptions.elementAt(_selectedIndex), 
-      
+      body: _widgetOptions.elementAt(_selectedIndex),
+
       floatingActionButton: FloatingActionButton(
         onPressed: _onFabPressed,
         child: const Icon(Icons.add),
       ),
-      
-      // BARRA DE NAVEGAÇÃO INFERIOR
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped, 
-        selectedItemColor: Theme.of(context).colorScheme.primary, 
-        unselectedItemColor: Colors.grey, 
+        onTap: _onItemTapped,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             label: 'Anotações',
@@ -191,33 +168,36 @@ class _NotesContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Box<Nota>>(
       valueListenable: notaBox.listenable(),
-     builder: (context, box, _) {
-          if (box.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.note_add, size: 80, color: Colors.grey),
-                  Text('Nenhuma anotação registrada!', style: TextStyle(fontSize: 18)),
-                  Text('Toque no "+" para adicionar uma nova anotação.', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
-          }
-
+      builder: (context, box, _) {
+        if (box.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.note_add, size: 80, color: Colors.grey),
+                Text(
+                  'Nenhuma anotação registrada!',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Toque no "+" para adicionar uma nova anotação.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
         final int itemCount = box.length;
         final reversedKeys = box.keys.toList().reversed.toList();
-        
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: itemCount,
           itemBuilder: (context, index) {
             final key = reversedKeys[index];
-            final Nota? nota = box.get(key); 
-            
-            if (nota == null) return const SizedBox.shrink();
+            final Nota? nota = box.get(key);
 
-            final dismissibleKey = Key(key.toString()); 
+            if (nota == null) return const SizedBox.shrink();
+            final dismissibleKey = Key(key.toString());
 
             return Dismissible(
               key: dismissibleKey,
@@ -229,7 +209,7 @@ class _NotesContent extends StatelessWidget {
               ),
               direction: DismissDirection.startToEnd,
               onDismissed: (_) async {
-                await box.delete(key); 
+                await box.delete(key);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Anotação removida')),
                 );
@@ -250,7 +230,7 @@ class _NotesContent extends StatelessWidget {
                     );
                   },
                   onDelete: () async {
-                    await box.delete(key); 
+                    await box.delete(key);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Anotação removida')),
                     );
