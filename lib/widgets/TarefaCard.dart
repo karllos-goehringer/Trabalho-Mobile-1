@@ -18,7 +18,6 @@ class TarefaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Estilo para tarefas concluídas (texto riscado e cor de destaque)
     final TextStyle titleStyle = TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
@@ -31,20 +30,18 @@ class TarefaCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        // Adiciona uma borda colorida se a tarefa estiver concluída
         side: BorderSide(
-          color: tarefa.concluida ? Colors.green.shade600 : Theme.of(context).dividerColor.withOpacity(0.5),
+          color: tarefa.concluida ? Colors.green.shade600 : Theme.of(context).dividerColor,
           width: 1.5,
         ),
       ),
       child: InkWell(
-        onTap: onTap, // Abre a página de edição/detalhes
+        onTap: onTap, 
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
           child: Row(
             children: [
-              // Checkbox Interativo para marcar como concluída
               Checkbox(
                 value: tarefa.concluida,
                 onChanged: (bool? newValue) {
@@ -54,8 +51,6 @@ class TarefaCard extends StatelessWidget {
                 activeColor: Colors.green,
               ),
               const SizedBox(width: 8),
-
-              // Título e data
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,8 +69,6 @@ class TarefaCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // Botão de Exclusão (opcional, mas útil para o card)
               IconButton(
                 icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
                 onPressed: onDelete,

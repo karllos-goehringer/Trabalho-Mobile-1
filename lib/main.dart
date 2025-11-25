@@ -38,7 +38,7 @@ class MyApp extends StatefulWidget {
 
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode themeMode = ThemeMode.light;
+  ThemeMode themeMode = ThemeMode.dark;
 
   void toggleTheme() {
     setState(() {
@@ -112,9 +112,7 @@ class _HomePageState extends State<HomePage> {
     
     // Inicializa a lista de widgets
     _widgetOptions = <Widget>[
-      // Tela 1: Anotações (usando o widget de conteúdo de notas)
       _NotesContent(notaBox: notaBox), 
-      // Tela 2: Tarefas
       const TarefaPage(), 
     ];
   }
@@ -125,18 +123,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
   
-  // Função para lidar com o FAB (Botão Flutuante de Ação)
   void _onFabPressed() async {
     final page = _selectedIndex == 0
         ? const CreateNotePage() 
-        : const CreateTarefaPage(); // Página de criação de tarefas (do TarefaPage.dart)
+        : const CreateTarefaPage();
 
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => page),
     );
     
-    setState(() {}); // Força a atualização após voltar
+    setState(() {});
   }
 
   @override
@@ -185,11 +182,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ====================================================================
-// WIDGET SEPARADO PARA CONTEÚDO DE ANOTAÇÕES
-// Este código foi extraído da HomePage original.
-// ====================================================================
-
 class _NotesContent extends StatelessWidget {
   final Box<Nota> notaBox;
 
@@ -199,10 +191,19 @@ class _NotesContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Box<Nota>>(
       valueListenable: notaBox.listenable(),
-      builder: (context, box, _) {
-        if (box.isEmpty) {
-          return const Center(child: Text('Nenhuma anotação encontrada.'));
-        }
+     builder: (context, box, _) {
+          if (box.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.note_add, size: 80, color: Colors.grey),
+                  Text('Nenhuma anotação registrada!', style: TextStyle(fontSize: 18)),
+                  Text('Toque no "+" para adicionar uma nova anotação.', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            );
+          }
 
         final int itemCount = box.length;
         final reversedKeys = box.keys.toList().reversed.toList();

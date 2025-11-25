@@ -12,7 +12,6 @@ class CreateTarefaPage extends StatefulWidget {
 
 class _CreateTarefaPageState extends State<CreateTarefaPage> {
   final _titleController = TextEditingController();
-  // 1. Variável de estado para o Checkbox
   bool _concluida = false; 
 
   final String _selectedDate =
@@ -32,11 +31,8 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
     final tarefa = Tarefa(
       titulo: _titleController.text,
       momentoCadastro: _selectedDate,
-      // 4. Usar o estado do Checkbox
       concluida: _concluida, 
     );
-    
-    // --- SALVAR NO HIVE (nome correto: notaBox) ---
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
     await tarefaBox.add(tarefa);
     Navigator.pop(context, tarefa);
@@ -65,13 +61,11 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
               ),
             ),
             const SizedBox(height: 10),
-            // 2. Adicionar o Checkbox
             Row(
               children: [
                 Checkbox(
                   value: _concluida,
                   onChanged: (bool? newValue) {
-                    // 3. Atualizar o estado
                     setState(() { 
                       _concluida = newValue ?? false;
                     });
@@ -80,19 +74,6 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
                 const Text("Tarefa Concluída"),
               ],
             ),
-            // Alternativamente, use CheckboxListTile:
-            /*
-            CheckboxListTile(
-              title: const Text("Tarefa Concluída"),
-              value: _concluida,
-              onChanged: (bool? newValue) {
-                setState(() {
-                  _concluida = newValue ?? false;
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading, // Para mover o checkbox para o início
-            ),
-            */
           ],
         ),
       ),

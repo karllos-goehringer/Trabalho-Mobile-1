@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart'; // Para o editor
-import '../models/NotaClass.dart'; // O modelo de dados Nota
+import 'package:flutter_quill/flutter_quill.dart'; 
+import '../models/NotaClass.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
@@ -16,7 +16,6 @@ class EditNotePage extends StatefulWidget {
 }
 
 class _EditNotePageState extends State<EditNotePage> {
-  // O late é usado porque estes objetos serão inicializados no initState com os dados da nota
   late TextEditingController _titleController;
   late QuillController _quillController;
   
@@ -25,11 +24,8 @@ class _EditNotePageState extends State<EditNotePage> {
   @override
   void initState() {
     super.initState();
-    
-    // 1. Inicializa o título com o valor existente
-    _titleController = TextEditingController(text: widget.nota.titulo);
+        _titleController = TextEditingController(text: widget.nota.titulo);
 
-    // 2. Inicializa o conteúdo rico com o valor existente
     try {
       final docJson = jsonDecode(widget.nota.texto);
       final document = Document.fromJson(docJson);
@@ -38,15 +34,12 @@ class _EditNotePageState extends State<EditNotePage> {
         selection: const TextSelection.collapsed(offset: 0),
       );
     } catch (e) {
-      // Fallback: se o JSON estiver inválido, inicia com texto simples
       final document = Document()..insert(0, 'Erro ao carregar conteúdo de texto rico. Texto original: ${widget.nota.texto}');
       _quillController = QuillController(
         document: document,
         selection: const TextSelection.collapsed(offset: 0),
       );
     }
-
-    // 3. Inicializa a imagem existente
     imageBytes = widget.nota.imageBytes;
   }
 
@@ -92,14 +85,10 @@ class _EditNotePageState extends State<EditNotePage> {
       );
       return;
     }
-
-    // ATUALIZA o objeto Nota existente
     widget.nota.titulo = _titleController.text;
     widget.nota.texto = richTextJson; 
     widget.nota.imageBytes = imageBytes;
     
-    // Salva as alterações no Hive
-
     final _momentoEdicao = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Nota '${widget.nota.titulo}' atualizada em $_momentoEdicao")),
@@ -152,11 +141,9 @@ class _EditNotePageState extends State<EditNotePage> {
             ),
             const SizedBox(height: 8),
 
-            // O editor de texto rico com sua barra de ferramentas
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Barra de ferramentas do Quill
                 Container(
                   decoration: BoxDecoration(
                     color: toolbarBackgroundColor, 
@@ -175,7 +162,6 @@ class _EditNotePageState extends State<EditNotePage> {
                   ),
                 ),
                 
-                // Editor de texto
                 Container(
                   height: editorHeight, 
                   decoration: BoxDecoration(
@@ -208,7 +194,6 @@ class _EditNotePageState extends State<EditNotePage> {
             
             const SizedBox(height: 20),
             
-            // Botão Adicionar/Remover Imagem
             Row(
               children: [
                 TextButton.icon(
@@ -225,7 +210,6 @@ class _EditNotePageState extends State<EditNotePage> {
               ],
             ),
 
-            // Pré-visualização da imagem
             if (imageBytes != null)
               Column(
                 children: [

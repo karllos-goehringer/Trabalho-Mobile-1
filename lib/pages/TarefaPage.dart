@@ -3,18 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 
-// ===================================================
-// PLACEHOLDERS (SUBSTITUA PELOS SEUS ARQUIVOS REAIS)
-// ===================================================
-
-// Classe Placeholder para Tarefa (models/TarefaClass.dart)
-
-
-// Adapter Placeholder
-
-
-// Componente Card Placeholder (widgets/TarefaCard.dart)
-// Adaptado para usar a classe Tarefa definida acima
 class TarefaCard extends StatelessWidget {
   final Tarefa tarefa;
   final VoidCallback onTap;
@@ -92,9 +80,6 @@ class TarefaCard extends StatelessWidget {
     );
   }
 }
-
-
-// Widget Placeholder para a página de Criação (pages/FormAddNotaCard.dart)
 class CreateTarefaPage extends StatefulWidget {
   const CreateTarefaPage({super.key});
 
@@ -121,12 +106,8 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
       momentoCadastro: _selectedDate,
       concluida: _concluida, 
     );
-    
-    // Supondo que você usa 'notaBox' para tarefas também
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
     await tarefaBox.add(tarefa);
-    
-    // Retorna para a página anterior
     Navigator.pop(context); 
   }
 
@@ -173,9 +154,6 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
   }
 }
 
-// ===================================================
-// PÁGINA PRINCIPAL DE TAREFAS
-// ===================================================
 
 class TarefaPage extends StatefulWidget {
   const TarefaPage({super.key});
@@ -190,45 +168,28 @@ class _TarefaPageState extends State<TarefaPage> {
   @override
   void initState() {
     super.initState();
-    // Inicializa a box de tarefas
-    // É uma boa prática usar uma box separada, mas estou usando 'notaBox'
-    // como você indicou no código anterior.
     tarefaBox = Hive.box<Tarefa>('tarefaBox'); 
   }
-
-  // Função para deletar a tarefa
   void _deleteTarefa(dynamic key) async {
     await tarefaBox.delete(key);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tarefa removida!')),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+     const SnackBar(content: Text('Tarefa removida')),
+    );
   }
-
-  // Função para alternar o status de conclusão
   void _toggleComplete(dynamic key, Tarefa tarefa, bool newValue) async {
-    // 1. Cria uma cópia da tarefa com o novo estado de conclusão
     final updatedTarefa = Tarefa(
       titulo: tarefa.titulo,
       momentoCadastro: tarefa.momentoCadastro,
-      concluida: newValue, // O novo valor
+      concluida: newValue,
     );
-
-    // 2. Atualiza a box usando a chave
     await tarefaBox.put(key, updatedTarefa); 
-    
-    // O ValueListenableBuilder fará o rebuild automaticamente
   }
 
 
   @override
   Widget build(BuildContext context) {
-    // Acessa a box que contém as Tarefas (Nota no seu setup)
     final box = tarefaBox;
-
     return Scaffold(
-     
       body: ValueListenableBuilder<Box<Tarefa>>(
         valueListenable: box.listenable(),
         builder: (context, box, _) {
@@ -244,21 +205,14 @@ class _TarefaPageState extends State<TarefaPage> {
               ),
             );
           }
-
-          // Obtém as chaves e inverte para mostrar as mais recentes primeiro
           final reversedKeys = box.keys.toList().reversed.toList();
-          
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: box.length,
             itemBuilder: (context, index) {
               final key = reversedKeys[index];
-              // Tenta obter a Tarefa
               final Tarefa? tarefa = box.get(key); 
-              
               if (tarefa == null) return const SizedBox.shrink();
-
-              // Usa o Dismissible para deletar arrastando
               return Dismissible(
                 key: Key(key.toString()),
                 direction: DismissDirection.endToStart,
@@ -268,34 +222,23 @@ class _TarefaPageState extends State<TarefaPage> {
                   padding: const EdgeInsets.only(right: 16),
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
-                onDismissed: (_) => _deleteTarefa(key), // Chama a função de deleção
+                onDismissed: (_) => _deleteTarefa(key),
                 child: TarefaCard(
                   tarefa: tarefa,
                   onTap: () {
-                    // Navega para uma tela de edição (você precisaria criar EditTarefaPage)
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Implementar navegação para edição da tarefa')),
                     );
                   },
-                  // Passa a função que atualiza o status de conclusão
                   onToggleComplete: (newValue) => _toggleComplete(key, tarefa, newValue),
-                  onDelete: () => _deleteTarefa(key), // Deleta com o botão interno
+                  onDelete: () => _deleteTarefa(key),
                 ),
               );
             },
           );
         },
       ),
-      // Botão para adicionar nova tarefa
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateTarefaPage()), // Usa a página de criação
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      
     );
   }
 }
