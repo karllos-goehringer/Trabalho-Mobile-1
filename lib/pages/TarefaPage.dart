@@ -243,14 +243,6 @@ class _TarefaPageState extends State<TarefaPage> {
           );
         },
       ),
-      // Se houver um FloatingActionButton que abre o formulário:
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => Navigator.push(
-      //     context,
-      //     MaterialPageRoute(builder: (context) => const TarefaFormPage()),
-      //   ),
-      //   child: const Icon(Icons.add),
-      // ),
     );
   }
 }
@@ -273,17 +265,14 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
 
   DateTime? _selectedAlarmDateTime;
 
-  // 🎯 Campo para armazenar a chave do Hive para PUT
   dynamic _tarefaHiveKey;
 
   @override
   void initState() {
     super.initState();
 
-    // 🎯 Pega a chave do Hive para uso no saveOrUpdateNote
     _tarefaHiveKey = widget.hiveKey; 
 
-    // Inicializar os controladores e estados com os dados da tarefa, se houver.
     if (widget.tarefa != null) {
       _id = widget.tarefa!.id;
       _titleController.text = widget.tarefa!.titulo;
@@ -291,7 +280,6 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
       _selectedAlarmDateTime = widget.tarefa!.dataAlarme;
       _momentoCadastro = widget.tarefa!.momentoCadastro;
     } else {
-      // Modo Criação
       _id = 0; 
       _concluida = false;
       _momentoCadastro = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
@@ -371,16 +359,16 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
     // Sempre tenta parar o alarme antigo, caso o ID não tenha mudado.
     await Alarm.stop(newOrUpdatedTarefa.id); 
 
-    // 🎯 LÓGICA DE SALVAR CORRIGIDA
+    //LÓGICA DE SALVAR CORRIGIDA
     if (widget.tarefa != null) {
-      // MODO EDIÇÃO: Usa a CHAVE DO HIVE recebida
+      //Usa a CHAVE DO HIVE recebida
       await tarefaBox.put(_tarefaHiveKey, newOrUpdatedTarefa);
     } else {
-      // MODO CRIAÇÃO: Usa ADD (Hive gera a chave)
+      //Usa ADD (Hive gera a chave)
       await tarefaBox.add(newOrUpdatedTarefa);
     }
 
-    // 5. Lógica de SET do Alarme
+    //Lógica de SET do Alarme
     if (newOrUpdatedTarefa.dataAlarme != null && newOrUpdatedTarefa.dataAlarme!.isAfter(DateTime.now()) && !newOrUpdatedTarefa.concluida) {
       final settings = AlarmSettings(
         id: newOrUpdatedTarefa.id,

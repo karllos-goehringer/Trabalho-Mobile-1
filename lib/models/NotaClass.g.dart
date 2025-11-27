@@ -17,24 +17,27 @@ class NotaAdapter extends TypeAdapter<Nota> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Nota(
-      titulo: fields[0] as String,
-      texto: fields[1] as String,
-      momentoCadastro: fields[2] as String,
-      imageBytes: fields[3] as Uint8List?,
+      id: fields[0] as int,
+      titulo: fields[1] as String,
+      texto: fields[2] as String,
+      momentoCadastro: fields[3] as String,
+      imageBytes: fields[4] as Uint8List?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Nota obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.titulo)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.texto)
+      ..write(obj.titulo)
       ..writeByte(2)
-      ..write(obj.momentoCadastro)
+      ..write(obj.texto)
       ..writeByte(3)
+      ..write(obj.momentoCadastro)
+      ..writeByte(4)
       ..write(obj.imageBytes);
   }
 

@@ -48,7 +48,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
     });
   }
 
-  void saveNote() async {
+void saveNote() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -69,6 +69,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
     }
 
     final nota = Nota(
+      id: DateTime.now().millisecondsSinceEpoch.hashCode,
       titulo: _titleController.text,
       texto: richTextJson,
       momentoCadastro: _selectedDate,

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:NoteTask/models/boxes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:hive/hive.dart';
 import '../models/NotaClass.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
@@ -73,49 +75,56 @@ class _EditNotePageState extends State<EditNotePage> {
     });
   }
 
-  void saveNote() async {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
-      return;
-    }
+ void saveNote() async {
+  //if (_titleController.text.isEmpty) {
+  //  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
+  //  return;
+  //}
 
-    final richTextJson = jsonEncode(
-      _quillController.document.toDelta().toJson(),
-    );
+  final richTextJson = jsonEncode(
+    _quillController.document.toDelta().toJson(),
+  );
 
-    if (_quillController.document.toPlainText().trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("O texto da nota não pode estar vazio!")),
-      );
-      return;
-    }
-    widget.nota.titulo = _titleController.text;
-    widget.nota.texto = richTextJson;
-    widget.nota.imageBytes = imageBytes;
+  //if (_quillController.document.toPlainText().trim().isEmpty) {
+  //  ScaffoldMessenger.of(context).showSnackBar(
+  //    const SnackBar(content: Text("O texto da nota não pode estar vazio!")),
+  //  );
+  //  return;
+  //}
 
-    final _momentoEdicao = DateFormat(
-      'dd/MM/yyyy HH:mm',
-    ).format(DateTime.now());
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Nota '${widget.nota.titulo}' atualizada em $_momentoEdicao",
-        ),
+  final updatedTarefa = Nota(
+    id: widget.nota.id, 
+    titulo: _titleController.text,
+    momentoCadastro: widget.nota.momentoCadastro, 
+    texto: richTextJson,
+    imageBytes: imageBytes,
+  );
+
+  final key = widget.nota.id;
+  final notaBox = Hive.box('notaBox');
+  await notaBox.put(key, updatedTarefa); 
+
+  final _momentoEdicao = DateFormat(
+    'dd/MM/yyyy HH:mm',
+  ).format(DateTime.now());
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        "Nota '${_titleController.text}' atualizada em $_momentoEdicao", 
       ),
-    );
+    ),
+  );
 
-    Navigator.pop(context);
-  }
+  Navigator.pop(context);
+}
 
   @override
   Widget build(BuildContext context) {
     const double editorHeight = 300;
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
-
-    // Define as cores dinâmicas
+    //define as cores do background
     final editorBackgroundColor = colorScheme.surface;
     final toolbarBackgroundColor = isDark
         ? colorScheme.surfaceContainerHighest
@@ -225,7 +234,6 @@ class _EditNotePageState extends State<EditNotePage> {
                   ),
               ],
             ),
-
             if (imageBytes != null)
               Column(
                 children: [

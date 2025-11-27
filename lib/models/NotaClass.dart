@@ -5,17 +5,20 @@ part 'NotaClass.g.dart';
 @HiveType(typeId: 1)
 class Nota {
   Nota({
+    required this.id,
     required this.titulo,
     required this.texto,
     required this.momentoCadastro,
     this.imageBytes,
   });
   @HiveField(0)
-  String titulo;
+  int id;
   @HiveField(1)
-  String texto;
+  String titulo;
   @HiveField(2)
-  String momentoCadastro;
+  String texto;
   @HiveField(3)
+  String momentoCadastro;
+  @HiveField(4)
   Uint8List? imageBytes;
 }

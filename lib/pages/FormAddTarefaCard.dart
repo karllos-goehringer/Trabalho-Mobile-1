@@ -1,12 +1,11 @@
 import 'package:NoteTask/models/TarefaClass.dart';
 import 'package:alarm/alarm.dart';
-import 'package:alarm/model/alarm_settings.dart'; // Adicionado
+import 'package:alarm/model/alarm_settings.dart'; 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 
 class CreateTarefaPage extends StatefulWidget {
-  // 🎯 Adicionado: Recebe a tarefa original e sua chave do Hive (se for edição)
   final Tarefa? tarefaOriginal;
   final dynamic tarefaKey;
 
@@ -33,7 +32,6 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
   @override
   void initState() {
     super.initState();
-    // 🎯 Pré-preenche os campos se estiver no MODO EDIÇÃO
     if (widget.tarefaOriginal != null) {
       _titleController.text = widget.tarefaOriginal!.titulo;
       _concluida = widget.tarefaOriginal!.concluida;
@@ -95,13 +93,13 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
       return;
     }
 
-    // 1. Define o ID: Usa o ID original se estiver editando, senão gera um novo
+    //Usa o ID original se estiver editando, senão gera um novo
     final int taskId = widget.tarefaOriginal?.id ?? _titleController.text.hashCode;
 
     final tarefa = Tarefa(
       id: taskId,
       titulo: _titleController.text,
-      // 2. Data de Cadastro: Usa a data original se estiver editando
+      //Usa a data original se estiver editando
       momentoCadastro: widget.tarefaOriginal?.momentoCadastro ?? _selectedDate, 
       concluida: _concluida,
       dataAlarme: _selectedAlarmDateTime,
@@ -109,12 +107,10 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
 
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
 
-    // 🎯 3. Lógica de Salvar (PUT para editar, ADD para criar)
+    //(PUT para editar, ADD para criar)
     if (widget.tarefaKey != null) {
-      // MODO EDIÇÃO: Usa PUT com a CHAVE HIVE
       await tarefaBox.put(widget.tarefaKey, tarefa);
     } else {
-      // MODO CRIAÇÃO: Usa ADD (Hive gera a chave)
       await tarefaBox.add(tarefa);
     }
 
@@ -147,7 +143,6 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🎯 Atualiza o título para Edição se for o caso
       appBar: AppBar(
         title: Text(widget.tarefaOriginal != null ? "Editar Tarefa" : "Nova Tarefa"),
         actions: [

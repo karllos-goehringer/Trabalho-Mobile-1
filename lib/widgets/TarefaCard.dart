@@ -86,7 +86,6 @@ class TarefaCard extends StatelessWidget {
                       'Criada em: ${tarefa.momentoCadastro}',
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    // ADICIONA A VISUALIZAÇÃO DO ALARME AQUI
                     if (tarefa.dataAlarme != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),

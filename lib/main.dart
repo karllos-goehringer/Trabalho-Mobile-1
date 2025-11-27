@@ -111,7 +111,6 @@ class _HomePageState extends State<HomePage> {
         : const CreateTarefaPage();
 
     await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
-
     setState(() {});
   }
 

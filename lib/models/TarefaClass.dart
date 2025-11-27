@@ -24,5 +24,5 @@ class Tarefa {
   String momentoCadastro;
 
   @HiveField(4)
-  DateTime? dataAlarme; // pode ser nulo!
+  DateTime? dataAlarme; 
 }
