@@ -93,13 +93,11 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
       return;
     }
 
-    //Usa o ID original se estiver editando, senão gera um novo
     final int taskId = widget.tarefaOriginal?.id ?? _titleController.text.hashCode;
 
     final tarefa = Tarefa(
       id: taskId,
       titulo: _titleController.text,
-      //Usa a data original se estiver editando
       momentoCadastro: widget.tarefaOriginal?.momentoCadastro ?? _selectedDate, 
       concluida: _concluida,
       dataAlarme: _selectedAlarmDateTime,
@@ -107,14 +105,12 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
 
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
 
-    //(PUT para editar, ADD para criar)
     if (widget.tarefaKey != null) {
       await tarefaBox.put(widget.tarefaKey, tarefa);
     } else {
       await tarefaBox.add(tarefa);
     }
 
-    // 4. Lógica do Alarme (SET ou STOP)
     final bool shouldSetAlarm = tarefa.dataAlarme != null &&
         tarefa.dataAlarme!.isAfter(DateTime.now()) &&
         !tarefa.concluida;
@@ -133,7 +129,6 @@ class _CreateTarefaPageState extends State<CreateTarefaPage> {
 
       await Alarm.set(alarmSettings: settings);
     } else if (widget.tarefaOriginal != null) {
-      // Se não deve tocar o alarme (tarefa concluída ou alarme removido), pare o alarme antigo
       await Alarm.stop(tarefa.id);
     }
 

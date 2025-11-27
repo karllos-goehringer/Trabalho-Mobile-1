@@ -8,6 +8,7 @@ import 'package:NoteTask/pages/TarefaPage.dart';
 import 'package:NoteTask/widgets/NotaCard.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:NoteTask/models/boxes.dart' as boxes;
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:alarm/alarm.dart';
@@ -18,6 +19,8 @@ void main() async {
   Hive.registerAdapter(TarefaAdapter());
   await Hive.openBox<Nota>('notaBox');
   await Hive.openBox<Tarefa>('tarefaBox');
+  boxes.notaBox = Hive.box<Nota>('notaBox');
+  boxes.tarefaBox = Hive.box<Tarefa>('tarefaBox');
   WidgetsFlutterBinding.ensureInitialized();
   await Alarm.init();
   runApp(MyApp());
@@ -89,7 +92,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Apenas a box de Notas é necessária diretamente aqui.
     notaBox = Hive.box<Nota>('notaBox');
 
     // Inicializa a lista de widgets
@@ -218,13 +220,13 @@ class _NotesContent extends StatelessWidget {
                   horizontal: 12,
                   vertical: 6,
                 ),
-                child: NoteCard(
+                    child: NoteCard(
                   nota: nota,
                   onTap: () async {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EditNotePage(nota: nota),
+                        builder: (_) => EditNotePage(nota: nota, notaKey: key),
                       ),
                     );
                   },

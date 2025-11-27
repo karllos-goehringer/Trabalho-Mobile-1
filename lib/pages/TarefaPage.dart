@@ -143,7 +143,7 @@ class _TarefaPageState extends State<TarefaPage> {
 
   void _deleteTarefa(dynamic key) async {
     await tarefaBox.delete(key);
-    // Para garantir que o alarme seja parado ao deletar
+    //Para garantir que o alarme seja parado ao deletar
     final Tarefa? tarefa = tarefaBox.get(key);
     if (tarefa != null) {
       await Alarm.stop(tarefa.id);
@@ -231,7 +231,6 @@ class _TarefaPageState extends State<TarefaPage> {
                 child: TarefaCard(
                   tarefa: tarefa,
                   onTap: () async {
-                    // 🎯 USA O MÉTODO DE EDIÇÃO E PASSA A CHAVE
                     _navigateToEditTask(key, tarefa);
                   },
                   onToggleComplete: (newValue) =>
@@ -346,7 +345,6 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
     }
 
     final newOrUpdatedTarefa = Tarefa(
-      // Mantém o ID original (que é o ID do alarme) se for edição
       id: widget.tarefa != null ? widget.tarefa!.id : _titleController.text.hashCode, 
       titulo: _titleController.text,
       momentoCadastro: _momentoCadastro,
@@ -356,15 +354,12 @@ class _TarefaFormPageState extends State<TarefaFormPage> {
 
     final tarefaBox = Hive.box<Tarefa>('tarefaBox');
 
-    // Sempre tenta parar o alarme antigo, caso o ID não tenha mudado.
+    //Sempre tenta parar o alarme antigo, caso o ID não tenha mudado.
     await Alarm.stop(newOrUpdatedTarefa.id); 
 
-    //LÓGICA DE SALVAR CORRIGIDA
     if (widget.tarefa != null) {
-      //Usa a CHAVE DO HIVE recebida
       await tarefaBox.put(_tarefaHiveKey, newOrUpdatedTarefa);
     } else {
-      //Usa ADD (Hive gera a chave)
       await tarefaBox.add(newOrUpdatedTarefa);
     }
 

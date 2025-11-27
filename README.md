@@ -10,8 +10,8 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
 
 </div>
-🚀 Características
-📝 Sistema de Notas Avançado
+ Características
+ Sistema de Notas Avançado
 
     Editor Rich Text completo com Flutter Quill
 
@@ -23,7 +23,7 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
     Persistência local rápida com Hive
 
-✅ Sistema de Tarefas Inteligente
+ Sistema de Tarefas Inteligente
 
     Criação e edição de tarefas com interface intuitiva
 
@@ -35,7 +35,7 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
     Gestão automática de alarmes (pausa ao concluir)
 
-🎨 Interface Moderna
+ Interface Moderna
 
     Tema claro/escuro dinâmico com toggle
 
@@ -47,7 +47,7 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
     Interface responsiva para diferentes telas
 
-⚡ Performance e Usabilidade
+ Performance e Usabilidade
 
     Persistência local ultra-rápida com Hive
 
@@ -57,7 +57,7 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
     Operações CRUD otimizadas
 
-🛠️ Tecnologias Utilizadas
+ Tecnologias Utilizadas
 
     Flutter 3.19+ - Framework principal
 
@@ -73,7 +73,7 @@ Um aplicativo elegante para gerenciar notas com rich text e tarefas com sistema 
 
     Intl - Formatação de datas e internacionalização
 
- ▶️ Pra rodar: 
+  Pra rodar: 
   1-  flutter pub get
   2-  flutter run -d edge --web-browser-flag "--disable-web-security"
     Ou 

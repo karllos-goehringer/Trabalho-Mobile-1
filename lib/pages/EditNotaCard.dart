@@ -10,8 +10,9 @@ import 'dart:typed_data';
 
 class EditNotePage extends StatefulWidget {
   final Nota nota;
+  final dynamic notaKey;
 
-  const EditNotePage({super.key, required this.nota});
+  const EditNotePage({super.key, required this.nota, required this.notaKey});
 
   @override
   State<EditNotePage> createState() => _EditNotePageState();
@@ -76,47 +77,42 @@ class _EditNotePageState extends State<EditNotePage> {
   }
 
  void saveNote() async {
-  //if (_titleController.text.isEmpty) {
-  //  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Preencha o título!")));
-  //  return;
-  //}
+  try {
+    final richTextJson = jsonEncode(
+      _quillController.document.toDelta().toJson(),
+    );
 
-  final richTextJson = jsonEncode(
-    _quillController.document.toDelta().toJson(),
-  );
+    final updatedTarefa = Nota(
+      id: widget.nota.id,
+      titulo: _titleController.text,
+      momentoCadastro: widget.nota.momentoCadastro,
+      texto: richTextJson,
+      imageBytes: imageBytes,
+    );
 
-  //if (_quillController.document.toPlainText().trim().isEmpty) {
-  //  ScaffoldMessenger.of(context).showSnackBar(
-  //    const SnackBar(content: Text("O texto da nota não pode estar vazio!")),
-  //  );
-  //  return;
-  //}
+    final key = widget.notaKey;
+    await notaBox.put(key, updatedTarefa);
 
-  final updatedTarefa = Nota(
-    id: widget.nota.id, 
-    titulo: _titleController.text,
-    momentoCadastro: widget.nota.momentoCadastro, 
-    texto: richTextJson,
-    imageBytes: imageBytes,
-  );
+    final momentoEdicao = DateFormat(
+      'dd/MM/yyyy HH:mm',
+    ).format(DateTime.now());
 
-  final key = widget.nota.id;
-  final notaBox = Hive.box('notaBox');
-  await notaBox.put(key, updatedTarefa); 
-
-  final _momentoEdicao = DateFormat(
-    'dd/MM/yyyy HH:mm',
-  ).format(DateTime.now());
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        "Nota '${_titleController.text}' atualizada em $_momentoEdicao", 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Nota '${_titleController.text}' atualizada em $momentoEdicao",
+        ),
       ),
-    ),
-  );
+    );
 
-  Navigator.pop(context);
+    Navigator.pop(context);
+  } catch (e, st) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao salvar nota: $e')),
+    );
+    print('Erro ao salvar nota: $e');
+    print(st);
+  }
 }
 
   @override
